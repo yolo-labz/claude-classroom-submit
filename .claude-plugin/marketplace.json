@@ -1,0 +1,26 @@
+{
+  "name": "claude-classroom-submit",
+  "owner": {
+    "name": "Pedro Henrique Souza Balbino",
+    "email": "pedrobalbino@proton.me"
+  },
+  "metadata": {
+    "description": "Autonomous Google Classroom submission for Claude Code",
+    "version": "0.1.0",
+    "homepage": "https://github.com/yolo-labz/claude-classroom-submit",
+    "license": "MIT",
+    "category": "productivity"
+  },
+  "plugins": [
+    {
+      "name": "claude-classroom-submit",
+      "source": "./",
+      "description": "Submit files to Google Classroom assignments end-to-end via the Classroom REST API, bypassing the cross-origin Drive Picker iframe. Uploads via rclone, attaches + turns in atomically. Pure Python stdlib, zero third-party dependencies.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Pedro Henrique Souza Balbino",
+        "email": "pedrobalbino@proton.me"
+      }
+    }
+  ]
+}
