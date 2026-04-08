@@ -1,0 +1,5 @@
+{
+  "_comment": "Copy this file to ~/.config/claude-classroom-submit/config.json and adjust as needed. All fields are optional; defaults are documented in README.md.",
+  "rclone_remote": "gdrive-uni:Classroom-Submissions-2026.1",
+  "rclone_mount_path": "/Users/notroot/GoogleDrive-Uni/Classroom-Submissions-2026.1"
+}

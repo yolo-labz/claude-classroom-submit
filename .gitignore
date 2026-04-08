@@ -1,0 +1,33 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# Runtime / local
+*.log
+*.cache
+
+# NEVER commit real OAuth credentials or tokens — these live in ~/.config/claude-classroom-submit/
+credentials.json
+tokens.json
+client_secret*.json
+
+# Local notes not intended for publication
+NOTES.local.md
+TODO.local.md

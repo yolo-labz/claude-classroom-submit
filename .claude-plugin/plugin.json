@@ -1,0 +1,26 @@
+{
+  "name": "claude-classroom-submit",
+  "version": "0.1.0",
+  "description": "Autonomous Google Classroom submission for Claude Code. Bypasses the cross-origin Drive Picker iframe by going straight to the Classroom REST API: upload a local file to Drive via rclone, find the target assignment by query, attach the Drive file, and turn in — all in a single CLI call. Pure Python stdlib (zero third-party dependencies), OAuth 2.0 Installed App flow with local-only refresh-token storage. Built for students who want to finish their homework without clicking through Google Classroom's picker UI.",
+  "author": {
+    "name": "Pedro Henrique Souza Balbino",
+    "email": "pedrobalbino@proton.me",
+    "url": "https://github.com/phsb5321"
+  },
+  "homepage": "https://github.com/yolo-labz/claude-classroom-submit",
+  "repository": "https://github.com/yolo-labz/claude-classroom-submit",
+  "license": "MIT",
+  "keywords": [
+    "google-classroom",
+    "classroom-api",
+    "oauth2",
+    "rclone",
+    "automation",
+    "claude-code",
+    "claude-code-plugin",
+    "student-tools",
+    "macos",
+    "no-dependencies",
+    "stdlib-only"
+  ]
+}
