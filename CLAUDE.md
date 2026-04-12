@@ -104,3 +104,44 @@ There are no unit tests. `scripts/lint.sh`'s smoke test (calling `classroom-lib.
 - **Credentials JSON missing or wrong format:** the CLI distinguishes "file not found" from "missing client_id" and prints the right remediation. Test both paths before shipping.
 - **Picker iframe tab left open in Chrome from prior automation attempts:** irrelevant — the plugin doesn't touch Chrome. But if the user is confused why nothing is happening visually, tell them this plugin never opens a browser.
 - **Rclone mount stale after Chrome restart:** rclone's VFS cache can lag 5-15s on first write. The Python `upload_via_rclone` helper polls `rclone lsjson` for up to 20s before giving up.
+
+## Release engineering — shared standards
+
+Release-engineering standards are shared across all self-coded yolo-labz Claude Code
+plugins. The canonical source of truth lives in the NixOS config repo:
+
+- **Research:** `~/NixOS/meta/yolo-labz-release-engineering-research.md`
+- **Rollout plan:** `~/NixOS/meta/yolo-labz-release-engineering-plan.md`
+- **Enforced rule:** `plugin-release-engineering` in `~/NixOS/modules/home/claude-code.nix`
+  — loaded globally into every Claude Code session via home-manager.
+
+**Current state:** v0.1.0 unsigned tag, no CI, no `.github/` directory. Greenfield for
+supply-chain work.
+
+**Phase 2 rollout (see plan §6.3):**
+
+1. Bootstrap `.github/` from scratch. Target files: `workflows/{ci,release,codeql,osv-scan,scorecard,sonar,reproducibility,shellcheck}.yml`, `dependabot.yml`, `scorecard-config.yml`, `actions-lock.md`.
+2. Add `SECURITY.md`, `CODEOWNERS`, `CONTRIBUTING.md`. Enable Private Vulnerability Reporting.
+3. Enable branch protection via Repository Ruleset from scratch (currently unprotected).
+4. `pyproject.toml` with `hatchling` backend, `requires-python = ">=3.11"`, semver in both `plugin.json` and `pyproject.toml` — keep them locked.
+5. Set up **PyPI Trusted Publishing** via `pypa/gh-action-pypi-publish@release/v1`. Configure pending publisher on PyPI first (manual step, not automatable).
+6. Publish to PyPI anyway despite being zero-dep — trusted publishing + PEP 740 attestations are free benefits, and `uvx claude-classroom-submit` / `pipx install` becomes the user install path.
+7. Re-cut as **`v0.1.1`** signed. **Do NOT re-tag v0.1.0** — `slsa-verifier` validates against the commit SHA at signing time, and re-tagging produces stale provenance.
+
+**Python stdlib-specific guidance:**
+
+- Build via `SOURCE_DATE_EPOCH=$(git log -1 --format=%ct) PYTHONHASHSEED=0 uv build`.
+- CycloneDX + SPDX SBOMs will be minimal (one component — the package itself) but still meaningful: they cryptographically prove the zero-dep claim.
+- OSV-Scanner will be a no-op pass (nothing to scan).
+- `ruff` replaces flake8/black/isort; `pyright` over mypy. Install via `uvx`, not a dev dep.
+- CodeQL Python uses `build-mode: none` with `security-extended` query suite.
+- **CodeQL misses taint through `subprocess` shell-outs** — add a Semgrep rule for the `upload_via_rclone` helper: `python.lang.security.audit.dangerous-subprocess-use`. The argv list pattern is already correct; Semgrep enforces it going forward.
+- `SECURITY.md` points at `/security/advisories/new` (GitHub Private Vulnerability Reporting). No PGP.
+
+**Invariants:**
+
+1. Never re-tag a release.
+2. Never add a non-stdlib Python dep — the "stdlib-only" promise is load-bearing for trust, audit, and zero-install-friction. If a future feature needs a dep, it's a separate plugin.
+3. OAuth `credentials.json` and `tokens.json` are user-private — never committed, never logged. The `.gitignore` rule must stay.
+4. `shell=False` / argv-list for every `subprocess` call — never build shell strings from user input. `scripts/lint.sh` enforces via a grep.
+5. PyPI trusted publisher binding is fragile — renaming `release.yml` or changing the GitHub environment name breaks the identity match. Update the pending publisher config on PyPI before renaming.

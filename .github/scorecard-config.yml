@@ -1,0 +1,23 @@
+# OpenSSF Scorecard configuration
+# https://github.com/ossf/scorecard/blob/main/docs/config.md
+annotations:
+  - checks:
+      - Binary-Artifacts
+      - Branch-Protection
+      - Code-Review
+      - Contributors
+      - Dangerous-Workflow
+      - Dependency-Update-Tool
+      - Fuzzing
+      - License
+      - Maintained
+      - Packaging
+      - Pinned-Dependencies
+      - SAST
+      - Security-Policy
+      - Signed-Releases
+      - Token-Permissions
+      - Vulnerabilities
+    reasons:
+      - reason: not-applicable
+        details: "Zero-dependency stdlib-only Python plugin"
