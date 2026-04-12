@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 claude-classroom-submit — autonomous Google Classroom submission CLI.
 
@@ -41,11 +40,11 @@ Environment overrides:
 """
 
 import argparse
+import contextlib
 import http.server
 import json
 import os
 import socketserver
-import ssl
 import subprocess
 import sys
 import threading
@@ -54,7 +53,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import webbrowser
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -99,12 +98,12 @@ def user_config_path() -> str:
     return os.path.join(config_dir(), "config.json")
 
 
-def load_user_config() -> Dict[str, Any]:
+def load_user_config() -> dict[str, Any]:
     path = user_config_path()
     if not os.path.exists(path):
         return {}
     try:
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             return json.load(f)
     except (OSError, json.JSONDecodeError):
         return {}
@@ -158,7 +157,7 @@ def die(msg: str, code: int = 1) -> None:
 # ---------------------------------------------------------------------------
 
 
-def load_credentials() -> Dict[str, str]:
+def load_credentials() -> dict[str, str]:
     path = credentials_path()
     if not os.path.exists(path):
         raise SetupError(
@@ -167,7 +166,7 @@ def load_credentials() -> Dict[str, str]:
             "and save as credentials.json in that directory.\n"
             "See docs/google-cloud-setup.md in the plugin repository."
         )
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         data = json.load(f)
     # Google Cloud Console exports as {"installed": {...}} for Desktop type
     if "installed" in data:
@@ -186,26 +185,24 @@ def load_credentials() -> Dict[str, str]:
 # ---------------------------------------------------------------------------
 
 
-def load_tokens() -> Optional[Dict[str, Any]]:
+def load_tokens() -> dict[str, Any] | None:
     path = tokens_path()
     if not os.path.exists(path):
         return None
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         return json.load(f)
 
 
-def save_tokens(tokens: Dict[str, Any]) -> None:
+def save_tokens(tokens: dict[str, Any]) -> None:
     os.makedirs(config_dir(), exist_ok=True)
     path = tokens_path()
     with open(path, "w", encoding="utf-8") as f:
         json.dump(tokens, f, indent=2)
-    try:
+    with contextlib.suppress(OSError):
         os.chmod(path, 0o600)
-    except OSError:
-        pass
 
 
-def tokens_valid(tokens: Dict[str, Any]) -> bool:
+def tokens_valid(tokens: dict[str, Any]) -> bool:
     expiry = tokens.get("expiry_epoch", 0)
     return bool(tokens.get("access_token")) and expiry > time.time() + 60
 
@@ -215,11 +212,9 @@ def tokens_valid(tokens: Dict[str, Any]) -> bool:
 # ---------------------------------------------------------------------------
 
 
-def http_post_form(url: str, data: Dict[str, str]) -> Dict[str, Any]:
+def http_post_form(url: str, data: dict[str, str]) -> dict[str, Any]:
     payload = urllib.parse.urlencode(data).encode("utf-8")
-    req = urllib.request.Request(
-        url, data=payload, headers={"Content-Type": "application/x-www-form-urlencoded"}
-    )
+    req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/x-www-form-urlencoded"})
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
             return json.loads(resp.read().decode("utf-8"))
@@ -232,13 +227,13 @@ def http_request(
     method: str,
     url: str,
     access_token: str,
-    body: Optional[Dict[str, Any]] = None,
-) -> Dict[str, Any]:
+    body: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     headers = {
         "Authorization": f"Bearer {access_token}",
         "Accept": "application/json",
     }
-    data: Optional[bytes] = None
+    data: bytes | None = None
     if body is not None:
         data = json.dumps(body).encode("utf-8")
         headers["Content-Type"] = "application/json"
@@ -258,8 +253,8 @@ def http_request(
 
 
 class _OAuthCallbackHandler(http.server.BaseHTTPRequestHandler):
-    code: Optional[str] = None
-    error: Optional[str] = None
+    code: str | None = None
+    error: str | None = None
 
     def do_GET(self) -> None:  # noqa: N802 (required stdlib signature)
         parsed = urllib.parse.urlparse(self.path)
@@ -296,7 +291,7 @@ def oauth_port() -> int:
     return DEFAULT_OAUTH_PORT
 
 
-def do_oauth_flow() -> Dict[str, Any]:
+def do_oauth_flow() -> dict[str, Any]:
     creds = load_credentials()
     port = oauth_port()
     redirect_uri = f"http://localhost:{port}"
@@ -325,17 +320,13 @@ def do_oauth_flow() -> Dict[str, Any]:
     thread = threading.Thread(target=_serve, daemon=True)
     thread.start()
 
-    try:
+    with contextlib.suppress(webbrowser.Error):
         webbrowser.open(consent_url)
-    except webbrowser.Error:
-        pass
 
     print(f"Waiting for callback on {redirect_uri} (timeout 5 min)…")
     thread.join(timeout=305)
-    try:
+    with contextlib.suppress(OSError):
         server.server_close()
-    except OSError:
-        pass
 
     if _OAuthCallbackHandler.error:
         raise APIError(f"OAuth error: {_OAuthCallbackHandler.error}")
@@ -375,7 +366,7 @@ def do_oauth_flow() -> Dict[str, Any]:
     return tokens
 
 
-def refresh_access_token() -> Dict[str, Any]:
+def refresh_access_token() -> dict[str, Any]:
     tokens = load_tokens()
     if not tokens or not tokens.get("refresh_token"):
         raise SetupError("No tokens found. Run `classroom auth` first.")
@@ -412,7 +403,7 @@ def get_access_token() -> str:
 # ---------------------------------------------------------------------------
 
 
-def api(method: str, path: str, body: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+def api(method: str, path: str, body: dict[str, Any] | None = None) -> dict[str, Any]:
     token = get_access_token()
     url = path if path.startswith("http") else API_BASE + path
     try:
@@ -425,17 +416,17 @@ def api(method: str, path: str, body: Optional[Dict[str, Any]] = None) -> Dict[s
         raise
 
 
-def whoami() -> Dict[str, Any]:
+def whoami() -> dict[str, Any]:
     token = get_access_token()
     return http_request("GET", USERINFO_URL, token)
 
 
-def list_courses(active_only: bool = True) -> List[Dict[str, Any]]:
+def list_courses(active_only: bool = True) -> list[dict[str, Any]]:
     path = "/courses?pageSize=100"
     if active_only:
         path += "&courseStates=ACTIVE"
-    out: List[Dict[str, Any]] = []
-    next_token: Optional[str] = None
+    out: list[dict[str, Any]] = []
+    next_token: str | None = None
     while True:
         full = path + (f"&pageToken={next_token}" if next_token else "")
         resp = api("GET", full)
@@ -446,10 +437,10 @@ def list_courses(active_only: bool = True) -> List[Dict[str, Any]]:
     return out
 
 
-def list_coursework(course_id: str) -> List[Dict[str, Any]]:
+def list_coursework(course_id: str) -> list[dict[str, Any]]:
     path = f"/courses/{course_id}/courseWork?pageSize=100"
-    out: List[Dict[str, Any]] = []
-    next_token: Optional[str] = None
+    out: list[dict[str, Any]] = []
+    next_token: str | None = None
     while True:
         full = path + (f"&pageToken={next_token}" if next_token else "")
         resp = api("GET", full)
@@ -460,16 +451,13 @@ def list_coursework(course_id: str) -> List[Dict[str, Any]]:
     return out
 
 
-def list_submissions(course_id: str, coursework_id: str, user_id: str = "me") -> List[Dict[str, Any]]:
-    path = (
-        f"/courses/{course_id}/courseWork/{coursework_id}/studentSubmissions"
-        f"?userId={user_id}&pageSize=20"
-    )
+def list_submissions(course_id: str, coursework_id: str, user_id: str = "me") -> list[dict[str, Any]]:
+    path = f"/courses/{course_id}/courseWork/{coursework_id}/studentSubmissions?userId={user_id}&pageSize=20"
     resp = api("GET", path)
     return resp.get("studentSubmissions", [])
 
 
-def get_my_submission(course_id: str, coursework_id: str) -> Dict[str, Any]:
+def get_my_submission(course_id: str, coursework_id: str) -> dict[str, Any]:
     subs = list_submissions(course_id, coursework_id, "me")
     if not subs:
         raise NotFoundError(
@@ -479,26 +467,18 @@ def get_my_submission(course_id: str, coursework_id: str) -> Dict[str, Any]:
     return subs[0]
 
 
-def attach_drive_file(
-    course_id: str, coursework_id: str, submission_id: str, drive_file_id: str
-) -> Dict[str, Any]:
-    path = (
-        f"/courses/{course_id}/courseWork/{coursework_id}"
-        f"/studentSubmissions/{submission_id}:modifyAttachments"
-    )
+def attach_drive_file(course_id: str, coursework_id: str, submission_id: str, drive_file_id: str) -> dict[str, Any]:
+    path = f"/courses/{course_id}/courseWork/{coursework_id}/studentSubmissions/{submission_id}:modifyAttachments"
     body = {"addAttachments": [{"driveFile": {"id": drive_file_id}}]}
     return api("POST", path, body)
 
 
-def turn_in_submission(course_id: str, coursework_id: str, submission_id: str) -> Dict[str, Any]:
-    path = (
-        f"/courses/{course_id}/courseWork/{coursework_id}"
-        f"/studentSubmissions/{submission_id}:turnIn"
-    )
+def turn_in_submission(course_id: str, coursework_id: str, submission_id: str) -> dict[str, Any]:
+    path = f"/courses/{course_id}/courseWork/{coursework_id}/studentSubmissions/{submission_id}:turnIn"
     return api("POST", path, {})
 
 
-def submit(course_id: str, coursework_id: str, drive_file_id: str) -> Dict[str, Any]:
+def submit(course_id: str, coursework_id: str, drive_file_id: str) -> dict[str, Any]:
     submission = get_my_submission(course_id, coursework_id)
     sub_id = submission["id"]
     state = submission.get("state", "")
@@ -516,10 +496,10 @@ def submit(course_id: str, coursework_id: str, drive_file_id: str) -> Dict[str, 
     }
 
 
-def find_coursework(query: str) -> List[Dict[str, Any]]:
+def find_coursework(query: str) -> list[dict[str, Any]]:
     """Search all active courses for coursework whose title contains `query` (case-insensitive)."""
     query_lc = query.lower()
-    out: List[Dict[str, Any]] = []
+    out: list[dict[str, Any]] = []
     for course in list_courses(active_only=True):
         try:
             items = list_coursework(course["id"])
@@ -552,15 +532,13 @@ def find_coursework(query: str) -> List[Dict[str, Any]]:
 
 def rclone_available() -> bool:
     try:
-        subprocess.run(
-            ["rclone", "version"], capture_output=True, check=True, timeout=10
-        )
+        subprocess.run(["rclone", "version"], capture_output=True, check=True, timeout=10)
         return True
     except (FileNotFoundError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
         return False
 
 
-def rclone_lsjson(remote: str) -> List[Dict[str, Any]]:
+def rclone_lsjson(remote: str) -> list[dict[str, Any]]:
     result = subprocess.run(
         ["rclone", "lsjson", "--original", remote],
         capture_output=True,
@@ -579,7 +557,7 @@ def rclone_copy_to_remote(local_path: str, remote: str) -> None:
     )
 
 
-def upload_via_rclone(file_path: str, remote: Optional[str] = None) -> Tuple[str, str]:
+def upload_via_rclone(file_path: str, remote: str | None = None) -> tuple[str, str]:
     """Upload `file_path` to `remote` and return (drive_file_id, file_name).
 
     Prefers the local FUSE mount if available (faster, no rclone copy),
@@ -595,6 +573,7 @@ def upload_via_rclone(file_path: str, remote: Optional[str] = None) -> Tuple[str
         # Mount is available — use plain cp
         dest = os.path.join(mount, basename)
         import shutil
+
         shutil.copy2(file_path, dest)
     else:
         if not rclone_available():
@@ -606,7 +585,7 @@ def upload_via_rclone(file_path: str, remote: Optional[str] = None) -> Tuple[str
 
     # Poll for Drive sync (up to 20s)
     deadline = time.time() + 20
-    last_err: Optional[Exception] = None
+    last_err: Exception | None = None
     while time.time() < deadline:
         try:
             files = rclone_lsjson(remote)
@@ -655,7 +634,7 @@ def cmd_courses(args: argparse.Namespace) -> int:
     courses = list_courses(active_only=not args.all)
     if args.terse:
         for c in courses:
-            print(f"{c['id']}\t{c.get('name','')}")
+            print(f"{c['id']}\t{c.get('name', '')}")
     else:
         print_json(courses)
     return 0
@@ -666,12 +645,8 @@ def cmd_assignments(args: argparse.Namespace) -> int:
     if args.terse:
         for c in items:
             due = c.get("dueDate") or {}
-            due_str = (
-                f"{due.get('year','?'):04d}-{due.get('month','?'):02d}-{due.get('day','?'):02d}"
-                if due
-                else ""
-            )
-            print(f"{c['id']}\t{due_str}\t{c.get('title','')}")
+            due_str = f"{due.get('year', '?'):04d}-{due.get('month', '?'):02d}-{due.get('day', '?'):02d}" if due else ""
+            print(f"{c['id']}\t{due_str}\t{c.get('title', '')}")
     else:
         print_json(items)
     return 0
@@ -685,14 +660,11 @@ def cmd_find(args: argparse.Namespace) -> int:
         for m in matches:
             due = m.get("due_date") or {}
             due_str = (
-                f"{due.get('year','?'):04d}-{due.get('month','?'):02d}-{due.get('day','?'):02d}"
+                f"{due.get('year', '?'):04d}-{due.get('month', '?'):02d}-{due.get('day', '?'):02d}"
                 if due
                 else "     no due"
             )
-            print(
-                f"{m['course_id']}\t{m['coursework_id']}\t{due_str}\t"
-                f"{m['course_name'][:30]:30s}\t{m['title']}"
-            )
+            print(f"{m['course_id']}\t{m['coursework_id']}\t{due_str}\t{m['course_name'][:30]:30s}\t{m['title']}")
     else:
         print_json(matches)
     return 0
@@ -727,9 +699,7 @@ def cmd_submit(args: argparse.Namespace) -> int:
     return 0
 
 
-def _resolve_assignment(
-    query: Optional[str], course_id: Optional[str], coursework_id: Optional[str]
-) -> Tuple[str, str, str]:
+def _resolve_assignment(query: str | None, course_id: str | None, coursework_id: str | None) -> tuple[str, str, str]:
     """Return (course_id, coursework_id, title)."""
     if course_id and coursework_id:
         return course_id, coursework_id, ""
@@ -740,9 +710,7 @@ def _resolve_assignment(
         raise NotFoundError(f"No coursework matching '{query}'")
     if len(matches) > 1:
         titles = [f"  - {m['title']} (course: {m['course_name']})" for m in matches]
-        raise ValueError(
-            f"Query '{query}' matched {len(matches)} assignments. Refine:\n" + "\n".join(titles)
-        )
+        raise ValueError(f"Query '{query}' matched {len(matches)} assignments. Refine:\n" + "\n".join(titles))
     m = matches[0]
     return m["course_id"], m["coursework_id"], m["title"]
 
@@ -753,9 +721,7 @@ def cmd_submit_file(args: argparse.Namespace) -> int:
         die(f"File not found: {file_path}", code=1)
 
     try:
-        course_id, coursework_id, title = _resolve_assignment(
-            args.query, args.course, args.coursework
-        )
+        course_id, coursework_id, title = _resolve_assignment(args.query, args.course, args.coursework)
     except (NotFoundError, ValueError) as e:
         die(str(e), code=4)
         return 4
@@ -876,7 +842,7 @@ COMMANDS = {
 }
 
 
-def main(argv: Optional[List[str]] = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     handler = COMMANDS[args.command]
