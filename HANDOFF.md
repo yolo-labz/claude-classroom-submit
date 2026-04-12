@@ -26,11 +26,18 @@
 
 **ZERO external Python deps.** The `dependencies = []` in pyproject.toml is load-bearing for trust. If a future feature needs a dep, it belongs in a separate plugin.
 
-## Pending manual steps
+## Completed post-merge (2026-04-12)
 
-1. **SonarQube project** — create `yolo-labz_claude-classroom-submit` on `sonarqube.home301server.com.br`, set SONAR_TOKEN secret
-2. **PyPI Trusted Publisher** — on pypi.org, create project `claude-classroom-submit`, add pending publisher: owner=yolo-labz, repo=claude-classroom-submit, workflow=release.yml, environment=pypi
-3. **Add required status checks** — after first main run: `Lint`, `Typecheck`, `Smoke test`, `CodeQL`, `OSV`
+- **SonarQube project** created (`yolo-labz_claude-classroom-submit`) via direct DB insert on Dokku host. PROJECT_ANALYSIS_TOKEN generated (SHA-384 hash), `SONAR_TOKEN` secret set. Token validated: `{"valid":true}`.
+- **PyPI Trusted Publisher** registered on pypi.org via Chrome automation. Pending publisher: owner=yolo-labz, repo=claude-classroom-submit, workflow=release.yml, environment=pypi.
+- **7 Dependabot PRs merged** (all action bumps: checkout, upload-artifact, download-artifact, setup-python, pypi-publish, sbom-action, scorecard-action).
+- **Release v0.1.1 live** with 4 assets: wheel, sdist, sbom.cdx.json, sbom.spdx.json.
+- **Release pipeline fixes applied**: split `anchore/sbom-action` into two calls (one per format), added missing GitHub Release job, made PyPI publish `continue-on-error: true`.
+
+## Nice-to-have (none blocking)
+
+1. **Add required status checks** — now that Lint, Typecheck, Smoke test, CodeQL, and OSV have all run on main, lock them as required
+2. **PyPI first publish** — the release workflow's publish job will succeed once the pending publisher is activated by the first upload. Re-tag `v0.1.2` after verifying the trusted publisher works, or trigger manually via `uv build && uv publish`
 
 ## Source of truth
 
