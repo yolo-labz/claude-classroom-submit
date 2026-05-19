@@ -210,3 +210,9 @@ MIT — see [LICENSE](LICENSE).
 ## Author
 
 Pedro Henrique Souza Balbino — [@phsb5321](https://github.com/phsb5321)
+
+---
+
+## Services
+
+Compliance-grade AI architecture for regulated workloads — async-first, USD-denominated, LATAM-based / EN-fluent. See [blog.home301server.com.br/services](https://blog.home301server.com.br/services/).
