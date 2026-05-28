@@ -13,9 +13,9 @@ cd claude-classroom-submit
 # Lint everything (requires shellcheck + shfmt + python3)
 ./scripts/lint.sh
 
-# Optional: install pre-commit hooks
-pip install pre-commit
-pre-commit install
+# Optional: install git hooks (lefthook — single Go binary, faster than husky/pre-commit)
+brew install lefthook  # or: nix shell nixpkgs#lefthook
+lefthook install
 ```
 
 No Python dependencies to install — the project uses stdlib only.
