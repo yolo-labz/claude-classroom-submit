@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>claude-classroom-submit — open graph card</title>
+  <style>
+    /* Catppuccin Mocha tokens (locked) */
+    :root {
+      --ctp-base:    #1e1e2e;
+      --ctp-mantle:  #181825;
+      --ctp-crust:   #11111b;
+      --ctp-surface0:#313244;
+      --ctp-text:    #cdd6f4;
+      --ctp-subtext0:#a6adc8;
+      --ctp-subtext1:#bac2de;
+      --ctp-overlay0:#6c7086;
+      --ctp-mauve:   #cba6f7;
+      --ctp-blue:    #89b4fa;
+      --ctp-green:   #a6e3a1;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 1200px;
+      height: 630px;
+      background: var(--ctp-base);
+      color: var(--ctp-text);
+      font-family: ui-serif, Georgia, 'Iowan Old Style', 'Apple Garamond', serif;
+      overflow: hidden;
+    }
+    body {
+      display: grid;
+      grid-template-rows: 3px 1fr;
+    }
+    .accent {
+      background: var(--ctp-mauve);
+    }
+    main {
+      background: var(--ctp-mantle);
+      padding: 64px 80px 56px;
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 56px;
+      align-items: stretch;
+    }
+    .col-left { display: flex; flex-direction: column; justify-content: space-between; }
+    .col-right { display: flex; flex-direction: column; justify-content: center; gap: 24px; }
+
+    .wordmark {
+      font-size: 84px;
+      font-weight: 700;
+      letter-spacing: -2px;
+      line-height: 0.95;
+      color: var(--ctp-text);
+    }
+    .wordmark .accent-word { color: var(--ctp-mauve); display: block; }
+    .tagline {
+      font-family: ui-monospace, 'JetBrains Mono', 'Fira Code', Menlo, monospace;
+      font-size: 22px;
+      color: var(--ctp-subtext0);
+      margin-top: 32px;
+      max-width: 560px;
+      line-height: 1.45;
+    }
+    .meta {
+      font-family: ui-monospace, 'JetBrains Mono', 'Fira Code', Menlo, monospace;
+      font-size: 14px;
+      color: var(--ctp-overlay0);
+      display: flex;
+      gap: 28px;
+      margin-top: 36px;
+    }
+    .meta span::before {
+      content: "·";
+      color: var(--ctp-surface0);
+      margin-right: 12px;
+    }
+    .meta span:first-child::before { content: ""; margin: 0; }
+
+    /* Right column: capability list, monospace label + serif value */
+    .capability-list {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 22px;
+      padding-left: 28px;
+      border-left: 1px solid var(--ctp-surface0);
+    }
+    .cap {
+      display: grid;
+      grid-template-rows: auto auto;
+      gap: 4px;
+    }
+    .cap-label {
+      font-family: ui-monospace, 'JetBrains Mono', 'Fira Code', Menlo, monospace;
+      font-size: 13px;
+      color: var(--ctp-mauve);
+      text-transform: lowercase;
+      letter-spacing: 0.5px;
+    }
+    .cap-value {
+      font-family: ui-serif, Georgia, 'Iowan Old Style', 'Apple Garamond', serif;
+      font-size: 20px;
+      color: var(--ctp-subtext1);
+      line-height: 1.3;
+    }
+    .footer {
+      font-family: ui-monospace, 'JetBrains Mono', 'Fira Code', Menlo, monospace;
+      font-size: 14px;
+      color: var(--ctp-overlay0);
+      margin-top: 0;
+    }
+    .footer .repo { color: var(--ctp-blue); }
+  </style>
+</head>
+<body>
+  <div class="accent" aria-hidden="true"></div>
+  <main>
+    <section class="col-left">
+      <div>
+        <div class="wordmark">classroom<span class="accent-word">submit</span></div>
+        <p class="tagline">Google Classroom REST attach + turn-in, no browser — bypasses the cross-origin Drive Picker iframe that blocks every automation.</p>
+        <div class="meta">
+          <span>python ≥3.8</span><span>stdlib-only</span><span>OAuth installed-app</span><span>MIT</span>
+        </div>
+      </div>
+      <div class="footer"><span class="repo">github.com/yolo-labz/claude-classroom-submit</span></div>
+    </section>
+    <section class="col-right">
+      <div class="capability-list">
+        <div class="cap">
+          <div class="cap-label">pattern</div>
+          <div class="cap-value">Classroom REST API direct — modifyAttachments + turnIn atomic</div>
+        </div>
+        <div class="cap">
+          <div class="cap-label">trade-off</div>
+          <div class="cap-value">one-time OAuth installed-app setup vs. picker-iframe deadlock</div>
+        </div>
+        <div class="cap">
+          <div class="cap-label">scopes</div>
+          <div class="cap-value">classroom.courses.readonly · classroom.coursework.me · nothing else</div>
+        </div>
+        <div class="cap">
+          <div class="cap-label">supply chain</div>
+          <div class="cap-value">PEP 740 attestations · Sigstore · dual SBOM (CycloneDX 1.7 + SPDX 2.3)</div>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

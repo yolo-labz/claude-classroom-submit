@@ -8,7 +8,7 @@
 #   4. Smoke test: classroom-lib.sh help (no setup needed, no API calls)
 #
 # If shfmt or shellcheck are missing, the script falls back to `nix run nixpkgs#<tool>`
-# so Pedro's NixOS workstation can lint without polluting the global env.
+# so a NixOS workstation can lint without polluting the global env.
 
 set -euo pipefail
 

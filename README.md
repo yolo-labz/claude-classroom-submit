@@ -1,11 +1,58 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/hero-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="docs/assets/hero-light.svg">
+  <img alt="claude-classroom-submit: Google Classroom REST submission CLI" src="docs/assets/hero-dark.svg">
+</picture>
+
 # claude-classroom-submit
 
-**Autonomously submit files to Google Classroom assignments from Claude Code** — bypass the cross-origin Drive Picker iframe that makes browser automation impossible, and go straight to the Classroom REST API.
+**Atomic Google Classroom submission via REST API** — bypass the cross-origin Drive Picker iframe that blocks browser automation, and go straight to the `modifyAttachments` + `turnIn` API calls.
 
 [![claude-code-plugin](https://img.shields.io/badge/claude--code-plugin-8a2be2)](https://docs.claude.com/en/docs/claude-code/plugins)
 [![python](https://img.shields.io/badge/python-3.8%2B-3776ab)](https://www.python.org/)
 [![stdlib-only](https://img.shields.io/badge/dependencies-stdlib--only-success)](skills/classroom-submit/classroom.py)
 [![license-MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
+---
+
+## Capability
+
+**Pattern.** Google Classroom submission via the official REST API — one `classroom-submit` call resolves the OAuth installed-app token, drops the file into Google Drive via rclone, calls `courses.courseWork.studentSubmissions.modifyAttachments`, and finalizes with `turnIn` in a single atomic flow.
+
+**Trade-off.** One-time OAuth 2.0 installed-app flow setup (~5 minutes: Cloud project → Classroom API enable → Desktop client → consent screen) in exchange for bypassing the cross-origin Drive Picker iframe entirely. Every subsequent submit is a single `classroom-submit submit-file` call, ~10 seconds end-to-end, no browser involved.
+
+**Use when.** A shell pipeline, cron job, or Claude Code plugin needs to attach a local file to a Classroom assignment and turn it in — without driving a browser, without scripting the picker UI, and without the `event.isTrusted === false` rejection that blocks every synthetic click into the picker iframe.
+
+```bash
+pip install claude-classroom-submit
+classroom-submit --file homework.pdf --assignment "Lista 3"
+```
+
+## Demo
+
+A non-interactive 16-second `asciinema` cast covering `classroom-submit --help`, `classroom-submit find "Lista 3"`, `classroom-submit submit-file ...` (full upload → attach → turn-in flow, ~3 s API roundtrip), the `already_turned_in` exit-code-5 guard, and `classroom-submit status` is checked into the repo at [`docs/assets/classroom-demo.cast`](./docs/assets/classroom-demo.cast). Replay locally:
+
+```bash
+asciinema play docs/assets/classroom-demo.cast
+```
+
+A hosted player embed will land in a follow-up PR after the cast is uploaded to `asciinema.org`.
+
+## How `claude-classroom-submit` compares
+
+The Classroom web client uses a **Drive Picker iframe** (`drive.google.com/picker` embedded in `classroom.google.com`) for file attachments — a hard wall for every automation that tries to finish a submission from the browser side.
+
+| Capability                                 | `claude-classroom-submit` | Drive Picker iframe (web UI) |
+|--------------------------------------------|:---:|:---:|
+| Cross-origin iframe bypass                 | REST API direct           | blocked (Same-Origin Policy) |
+| Pure Python stdlib (`urllib`, `http.server`, `json`) | zero third-party deps | n/a (requires browser) |
+| OAuth 2.0 installed-app flow               | one-time setup            | per-session interactive consent |
+| End-to-end submit                          | ~10 s                     | ~30 s+ manual click-through |
+| Atomic `modifyAttachments` + `turnIn`      | single call, fails closed | two manual UI steps |
+| `TURNED_IN` state guard                    | exit code 5 if already final | none (silent overwrite) |
+| PEP 740 attestations on PyPI               | yes                       | n/a |
+| Minimal scopes (`.coursework.me`, no grade book) | yes                 | full session cookie surface |
+| Works headless / CI / Claude Code plugin   | yes                       | no (browser-driven) |
 
 ---
 
@@ -58,15 +105,15 @@ All five steps run in a single `classroom-lib.sh submit-file` call, take ~10 sec
 Or install locally for development:
 
 ```bash
-git clone https://github.com/yolo-labz/claude-classroom-submit ~/Documents/Code/Apple/claude-classroom-submit
+git clone https://github.com/yolo-labz/claude-classroom-submit
 # Register as a local plugin via Claude Code's plugin.json:
-#   "~/Documents/Code/Apple/claude-classroom-submit"
+#   "<path/to/claude-classroom-submit>"
 ```
 
 ### As a standalone CLI
 
 ```bash
-alias classroom='~/Documents/Code/Apple/claude-classroom-submit/skills/classroom-submit/classroom-lib.sh'
+alias classroom='<path/to/claude-classroom-submit>/skills/classroom-submit/classroom-lib.sh'
 classroom help
 ```
 
@@ -158,7 +205,7 @@ When the user asks Claude to "submit X to Classroom", Claude auto-discovers this
 |------------------------------------|---------------------------------------------------------------|
 | `CLASSROOM_SUBMIT_CONFIG_DIR`      | `$XDG_CONFIG_HOME/claude-classroom-submit`                    |
 | `CLASSROOM_SUBMIT_RCLONE_REMOTE`   | `gdrive-uni:Classroom-Submissions-2026.1`                     |
-| `CLASSROOM_SUBMIT_RCLONE_MOUNT`    | `/Users/notroot/GoogleDrive-Uni/Classroom-Submissions-2026.1` |
+| `CLASSROOM_SUBMIT_RCLONE_MOUNT`    | `$HOME/GoogleDrive-Uni/Classroom-Submissions-2026.1`          |
 | `CLASSROOM_SUBMIT_OAUTH_PORT`      | `8765`                                                        |
 | `CLASSROOM_SUBMIT_PYTHON`          | (auto-detect `python3` / `python`)                            |
 
@@ -167,7 +214,7 @@ Persistent overrides live in `~/.config/claude-classroom-submit/config.json`:
 ```json
 {
   "rclone_remote": "gdrive-work:ClassroomDropbox",
-  "rclone_mount_path": "/Users/you/GDriveWork/ClassroomDropbox"
+  "rclone_mount_path": "$HOME/GDriveWork/ClassroomDropbox"
 }
 ```
 
@@ -187,7 +234,7 @@ rm -rf ~/.config/claude-classroom-submit
 
 ## FAQ
 
-**Why rclone instead of the Drive REST API?** Rclone is already how Pedro (the author) manages his uni Google Drive as a FUSE mount. Using it means a file copy is a plain `cp`, no extra Drive upload scope is needed, and the existing mount infrastructure is reused. The Classroom API accepts any Drive file ID the authenticated user has access to.
+**Why rclone instead of the Drive REST API?** The expected deployment manages a uni Google Drive as a FUSE mount via rclone. Reusing that mount means a file copy is a plain `cp`, no extra Drive upload scope is needed, and the existing mount infrastructure is reused. The Classroom API accepts any Drive file ID the authenticated user has access to.
 
 **Does this work on Linux?** Yes, almost everything is portable. The default rclone mount path is macOS-specific; override it via `CLASSROOM_SUBMIT_RCLONE_MOUNT`. The Python code has no macOS-specific bits.
 
@@ -206,10 +253,6 @@ rm -rf ~/.config/claude-classroom-submit
 ## License
 
 MIT — see [LICENSE](LICENSE).
-
-## Author
-
-Pedro Henrique Souza Balbino — [@phsb5321](https://github.com/phsb5321)
 
 ---
 

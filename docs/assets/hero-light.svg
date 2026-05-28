@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360" role="img" aria-labelledby="ccs-hero-light-title ccs-hero-light-desc">
+  <title id="ccs-hero-light-title">claude-classroom-submit: Google Classroom REST submission CLI</title>
+  <desc id="ccs-hero-light-desc">Catppuccin Latte card. Left panel shows the wordmark claude-classroom-submit in mauve over a monospaced tagline. Right panel shows a paper plane arrow flying into an open folder glyph, with a small Python silhouette anchoring the lower-right corner.</desc>
+  <rect width="1200" height="360" fill="#eff1f5"/>
+  <rect x="0" y="0" width="1200" height="3" fill="#8839ef"/>
+  <g font-family="ui-serif,Georgia,'Iowan Old Style','Apple Garamond',serif" fill="#4c4f69">
+    <text x="72" y="160" font-size="72" font-weight="700" letter-spacing="-2">classroom</text>
+    <text x="72" y="232" font-size="72" font-weight="700" letter-spacing="-2" fill="#8839ef">submit</text>
+  </g>
+  <g font-family="ui-monospace,'JetBrains Mono','Fira Code',Menlo,monospace" fill="#6c6f85">
+    <text x="76" y="276" font-size="18">REST attach + turn-in, no browser</text>
+  </g>
+  <g font-family="ui-monospace,'JetBrains Mono','Fira Code',Menlo,monospace" fill="#8c8fa1">
+    <text x="76" y="312" font-size="14">pip install claude-classroom-submit</text>
+  </g>
+  <g transform="translate(740,80)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M0,80 L300,80" stroke="#8839ef" stroke-width="1.8" stroke-dasharray="4 8" opacity="0.45"/>
+    <g transform="translate(40,40)">
+      <path d="M0,0 L120,80 L20,90 L0,0 Z" fill="#8839ef" opacity="0.92"/>
+      <path d="M0,0 L20,90 L48,62 Z" fill="#e6e9ef" opacity="0.85"/>
+    </g>
+    <g transform="translate(240,40)">
+      <path d="M0,16 Q0,0 16,0 H60 L80,20 H180 Q196,20 196,36 V128 Q196,144 180,144 H16 Q0,144 0,128 Z" fill="#e6e9ef" stroke="#1e66f5" stroke-width="2.4"/>
+      <path d="M0,52 H196" stroke="#1e66f5" stroke-width="2.4" opacity="0.55"/>
+      <text x="98" y="92" font-family="ui-monospace,'JetBrains Mono',monospace" font-size="13" fill="#1e66f5" text-anchor="middle">TURNED_IN</text>
+      <circle cx="98" cy="112" r="3" fill="#40a02b"/>
+    </g>
+  </g>
+  <g transform="translate(1060,236)" fill="#6c6f85" opacity="0.55">
+    <path d="M30,0 C46,0 56,10 56,26 V42 H88 C92,42 96,46 96,50 V72 C96,82 88,90 78,90 H18 C8,90 0,82 0,72 V50 C0,46 4,42 8,42 H40 V26 C40,18 32,12 26,12 C18,12 14,18 14,22 H4 C4,10 14,0 30,0 Z" />
+    <circle cx="36" cy="66" r="5" fill="#eff1f5"/>
+    <circle cx="60" cy="66" r="5" fill="#eff1f5"/>
+  </g>
+  <g font-family="ui-monospace,'JetBrains Mono','Fira Code',Menlo,monospace" fill="#9ca0b0">
+    <text x="1128" y="338" font-size="11" text-anchor="end">yolo-labz/claude-classroom-submit</text>
+  </g>
+</svg>
