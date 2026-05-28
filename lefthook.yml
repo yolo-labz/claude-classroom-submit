@@ -1,0 +1,41 @@
+# Git hook runner — faster than husky, single Go binary.
+# Replaces .pre-commit-config.yaml per yolo-labz canon: lefthook > husky > pre-commit.
+# Install:  brew install lefthook && lefthook install
+# Or via Nix:  nix shell nixpkgs#lefthook -c lefthook install
+
+pre-commit:
+  parallel: true
+  commands:
+    ruff-check:
+      glob: "*.py"
+      run: uvx ruff check {staged_files}
+    ruff-format:
+      glob: "*.py"
+      run: uvx ruff format --check {staged_files}
+    pyright:
+      glob: "*.py"
+      run: uvx pyright {staged_files}
+    shellcheck:
+      glob: "*.{sh,bash}"
+      run: shellcheck -x -o all -e SC2250,SC2312,SC2310 {staged_files}
+    shfmt:
+      glob: "*.{sh,bash}"
+      run: shfmt -d -i 0 -ci -bn {staged_files}
+    py-compile:
+      glob: "*.py"
+      run: python3 -m py_compile {staged_files}
+
+commit-msg:
+  commands:
+    conventional:
+      # Conventional Commits enforcement matches the canon in
+      # ~/.claude/CLAUDE.md (commit-style rule). Subject must be one of
+      # feat|fix|refactor|chore|docs|ci|test|style|perf|build|revert with
+      # optional scope.
+      run: |
+        if ! grep -qE '^(feat|fix|refactor|chore|docs|ci|test|style|perf|build|revert)(\([a-z0-9-]+\))?!?: ' {1}; then
+          echo "Commit message must follow Conventional Commits format:" >&2
+          echo "  <type>(<scope>)?: <subject>" >&2
+          echo "  type ∈ feat|fix|refactor|chore|docs|ci|test|style|perf|build|revert" >&2
+          exit 1
+        fi
