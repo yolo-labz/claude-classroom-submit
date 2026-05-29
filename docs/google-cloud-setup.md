@@ -67,7 +67,7 @@ Before you can create an OAuth client, Google makes you fill out the consent scr
 From a terminal on the same machine:
 
 ```bash
-~/Documents/Code/Apple/claude-classroom-submit/skills/classroom-submit/classroom-lib.sh auth
+<path/to/claude-classroom-submit>/skills/classroom-submit/classroom-lib.sh auth
 ```
 
 Or, if the plugin is installed in Claude Code:
