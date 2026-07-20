@@ -105,7 +105,7 @@ jobs:
           name: dist
           path: dist/
       - name: Publish to PyPI (trusted publishing + PEP 740 attestations)
-        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
+        uses: pypa/gh-action-pypi-publish@ba38be9e461d3875417946c167d0b5f3d385a247 # v1.14.1
         # attestations: true is the default — PEP 740 auto-attestations
         # trusted publishing is auto-detected from OIDC identity
 
@@ -132,7 +132,7 @@ jobs:
           name: sbom
           path: dist/
       - name: Create release
-        uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b # v3.0.1
+        uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
         with:
           generate_release_notes: true
           files: |
