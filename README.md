@@ -6,7 +6,7 @@
 
 # claude-classroom-submit
 
-**Atomic Google Classroom submission via REST API** — bypass the cross-origin Drive Picker iframe that blocks browser automation, and go straight to the `modifyAttachments` + `turnIn` API calls.
+**Atomic Google Classroom submission via REST API**: bypass the cross-origin Drive Picker iframe that blocks browser automation, and go straight to the `modifyAttachments` + `turnIn` API calls.
 
 [![claude-code-plugin](https://img.shields.io/badge/claude--code-plugin-8a2be2)](https://docs.claude.com/en/docs/claude-code/plugins)
 [![python](https://img.shields.io/badge/python-3.8%2B-3776ab)](https://www.python.org/)
@@ -17,11 +17,11 @@
 
 ## Capability
 
-**Pattern.** Google Classroom submission via the official REST API — one `classroom-submit` call resolves the OAuth installed-app token, drops the file into Google Drive via rclone, calls `courses.courseWork.studentSubmissions.modifyAttachments`, and finalizes with `turnIn` in a single atomic flow.
+**Pattern.** Google Classroom submission via the official REST API, one `classroom-submit` call resolves the OAuth installed-app token, drops the file into Google Drive via rclone, calls `courses.courseWork.studentSubmissions.modifyAttachments`, and finalizes with `turnIn` in a single atomic flow.
 
 **Trade-off.** One-time OAuth 2.0 installed-app flow setup (~5 minutes: Cloud project → Classroom API enable → Desktop client → consent screen) in exchange for bypassing the cross-origin Drive Picker iframe entirely. Every subsequent submit is a single `classroom-submit submit-file` call, ~10 seconds end-to-end, no browser involved.
 
-**Use when.** A shell pipeline, cron job, or Claude Code plugin needs to attach a local file to a Classroom assignment and turn it in — without driving a browser, without scripting the picker UI, and without the `event.isTrusted === false` rejection that blocks every synthetic click into the picker iframe.
+**Use when.** A shell pipeline, cron job, or Claude Code plugin needs to attach a local file to a Classroom assignment and turn it in, without driving a browser, without scripting the picker UI, and without the `event.isTrusted === false` rejection that blocks every synthetic click into the picker iframe.
 
 ```bash
 pip install claude-classroom-submit
@@ -40,7 +40,7 @@ A hosted player embed will land in a follow-up PR after the cast is uploaded to 
 
 ## How `claude-classroom-submit` compares
 
-The Classroom web client uses a **Drive Picker iframe** (`drive.google.com/picker` embedded in `classroom.google.com`) for file attachments — a hard wall for every automation that tries to finish a submission from the browser side.
+The Classroom web client uses a **Drive Picker iframe** (`drive.google.com/picker` embedded in `classroom.google.com`) for file attachments, a hard wall for every automation that tries to finish a submission from the browser side.
 
 | Capability                                 | `claude-classroom-submit` | Drive Picker iframe (web UI) |
 |--------------------------------------------|:---:|:---:|
@@ -66,7 +66,7 @@ Google Classroom's web client uses a **Drive Picker iframe** (hosted at `drive.g
 - Synthetic `DragEvent`s are rejected because `event.isTrusted === false`
 - `document.execCommand('insertHTML')` throws "This document requires TrustedHTML assignment"
 
-As a result, any Claude Code workflow that tries to **actually finish a Classroom submission** gets stuck at the picker. You can write the deliverable, compile the PDF, stage the Drive file, open the tab, even arm the picker — but you can't click the file inside the picker iframe, and you can't click "Entregar".
+As a result, any Claude Code workflow that tries to **actually finish a Classroom submission** gets stuck at the picker. You can write the deliverable, compile the PDF, stage the Drive file, open the tab, even arm the picker, but you can't click the file inside the picker iframe, and you can't click "Entregar".
 
 This plugin solves that by never touching the picker at all.
 
@@ -84,13 +84,13 @@ All five steps run in a single `classroom-lib.sh submit-file` call, take ~10 sec
 
 ## Features
 
-- **Zero third-party Python dependencies** — 600 lines of pure stdlib (`urllib`, `http.server`, `json`, `subprocess`). No `google-auth`, no `requests`, no `google-api-python-client`. Reproducible on NixOS, Alpine, whatever.
+- **Zero third-party Python dependencies**: 600 lines of pure stdlib (`urllib`, `http.server`, `json`, `subprocess`). No `google-auth`, no `requests`, no `google-api-python-client`. Reproducible on NixOS, Alpine, whatever.
 - **OAuth 2.0 Installed App flow** with loopback redirect (`http://localhost:8765`) and automatic access-token refresh.
-- **Minimal scopes** — only `classroom.courses.readonly` + `classroom.coursework.me`. The plugin cannot read other students' work, cannot touch the grade book, cannot send messages.
-- **Atomic submit** — `modifyAttachments` + `turnIn` in one call, with a hard check for `TURNED_IN` state to prevent double-submissions.
-- **Natural-language query search** — `find "Airbnb"` walks every active course and returns every assignment whose title or description contains "Airbnb". No need to memorize course IDs.
-- **Rclone-native** — reuses the user's existing rclone Drive remote (default: `gdrive-uni:Classroom-Submissions-2026.1`), prefers the local FUSE mount for instant uploads.
-- **Claude Code plugin** — integrates as a skill + three slash commands (`/classroom-auth`, `/classroom-find`, `/classroom-submit`), auto-triggers when the user asks to submit to Classroom.
+- **Minimal scopes**: only `classroom.courses.readonly` + `classroom.coursework.me`. The plugin cannot read other students' work, cannot touch the grade book, cannot send messages.
+- **Atomic submit**: `modifyAttachments` + `turnIn` in one call, with a hard check for `TURNED_IN` state to prevent double-submissions.
+- **Natural-language query search**: `find "Airbnb"` walks every active course and returns every assignment whose title or description contains "Airbnb". No need to memorize course IDs.
+- **Rclone-native**: reuses the user's existing rclone Drive remote (default: `gdrive-uni:Classroom-Submissions-2026.1`), prefers the local FUSE mount for instant uploads.
+- **Claude Code plugin**: integrates as a skill + three slash commands (`/classroom-auth`, `/classroom-find`, `/classroom-submit`), auto-triggers when the user asks to submit to Classroom.
 - **shellcheck + shfmt clean**, matches the conventions of [claude-mac-chrome](https://github.com/yolo-labz/claude-mac-chrome).
 
 ## Installation
@@ -126,7 +126,7 @@ Before first use, create a Google Cloud project and an OAuth 2.0 Desktop client.
 3. Configure OAuth consent screen (External, add your email as a test user, add 3 scopes)
 4. Create OAuth client → Desktop app → download JSON
 5. Save as `~/.config/claude-classroom-submit/credentials.json`
-6. `classroom-lib.sh auth` — opens browser, grants consent, saves tokens
+6. `classroom-lib.sh auth`, opens browser, grants consent, saves tokens
 
 After step 6, every subsequent call is autonomous.
 
@@ -182,9 +182,9 @@ classroom-lib.sh submit <course_id> <coursework_id> <drive_file_id>
 
 The plugin registers three slash commands:
 
-- `/claude-classroom-submit:classroom-auth` — one-time OAuth
-- `/claude-classroom-submit:classroom-find <query>` — search assignments
-- `/claude-classroom-submit:classroom-submit <file-path> <query>` — atomic submit
+- `/claude-classroom-submit:classroom-auth`, one-time OAuth
+- `/claude-classroom-submit:classroom-find <query>`, search assignments
+- `/claude-classroom-submit:classroom-submit <file-path> <query>`, atomic submit
 
 When the user asks Claude to "submit X to Classroom", Claude auto-discovers this plugin via the `classroom-submit` skill and runs the right command without requiring the user to invoke the slash command manually.
 
@@ -220,10 +220,10 @@ Persistent overrides live in `~/.config/claude-classroom-submit/config.json`:
 
 ## Security
 
-- **Local tokens only** — `tokens.json` lives at `~/.config/claude-classroom-submit/tokens.json` with mode `0600`. Never leaves the machine.
-- **No telemetry** — the plugin makes HTTPS calls only to `googleapis.com` and `oauth2.googleapis.com`. No other network I/O.
-- **Minimal scopes** — the plugin cannot list teacher-side data, cannot see other students' submissions, cannot modify grades, cannot comment, cannot send email. If you don't trust it, read `skills/classroom-submit/classroom.py` — it's a single file, stdlib-only.
-- **Own your OAuth client** — credentials.json is *your* OAuth 2.0 client, created in *your* Google Cloud project, consented by *you*. The plugin has no central backend, no shared secrets.
+- **Local tokens only**: `tokens.json` lives at `~/.config/claude-classroom-submit/tokens.json` with mode `0600`. Never leaves the machine.
+- **No telemetry**: the plugin makes HTTPS calls only to `googleapis.com` and `oauth2.googleapis.com`. No other network I/O.
+- **Minimal scopes**: the plugin cannot list teacher-side data, cannot see other students' submissions, cannot modify grades, cannot comment, cannot send email. If you don't trust it, read `skills/classroom-submit/classroom.py`, it's a single file, stdlib-only.
+- **Own your OAuth client**: credentials.json is *your* OAuth 2.0 client, created in *your* Google Cloud project, consented by *you*. The plugin has no central backend, no shared secrets.
 
 To uninstall fully:
 
@@ -238,24 +238,24 @@ rm -rf ~/.config/claude-classroom-submit
 
 **Does this work on Linux?** Yes, almost everything is portable. The default rclone mount path is macOS-specific; override it via `CLASSROOM_SUBMIT_RCLONE_MOUNT`. The Python code has no macOS-specific bits.
 
-**Does this work for teacher accounts?** No — the plugin only uses the `.me` variant of the coursework scope, which is for students submitting their own work. Teacher-side operations (grading, listing all students' submissions) need different scopes and a different plugin.
+**Does this work for teacher accounts?** No, the plugin only uses the `.me` variant of the coursework scope, which is for students submitting their own work. Teacher-side operations (grading, listing all students' submissions) need different scopes and a different plugin.
 
 **Can I attach multiple files at once?** Not in a single CLI call yet. Run `submit-file --attach-only` for each file, then `turn-in` once at the end.
 
-**Can I submit to an assignment that doesn't have `ASSIGNMENT` type (e.g., questions)?** Probably not — the API only exposes `modifyAttachments` for assignment-type coursework. Open an issue with the exact `workType` and I'll look into it.
+**Can I submit to an assignment that doesn't have `ASSIGNMENT` type (e.g., questions)?** Probably not, the API only exposes `modifyAttachments` for assignment-type coursework. Open an issue with the exact `workType` and I'll look into it.
 
 **Why not publish the OAuth client so users don't need Google Cloud setup?** Publishing requires Google verification, which for sensitive scopes (`classroom.coursework.me`) means a security review, a YouTube demo video, privacy policy hosting, and an annual audit. For a student tool that needs to stay trustworthy, it is cleaner for each user to own their own OAuth client. The 5-minute setup is a one-time cost.
 
 ## Related projects
 
-- [claude-mac-chrome](https://github.com/yolo-labz/claude-mac-chrome) — sibling plugin for deterministic multi-profile Chrome automation on macOS. This plugin's conventions (shellcheck-clean shell wrapper, subcommand dispatch, SKILL.md frontmatter) match `claude-mac-chrome`'s, and the two are designed to be used together.
+- [claude-mac-chrome](https://github.com/yolo-labz/claude-mac-chrome), sibling plugin for deterministic multi-profile Chrome automation on macOS. This plugin's conventions (shellcheck-clean shell wrapper, subcommand dispatch, SKILL.md frontmatter) match `claude-mac-chrome`'s, and the two are designed to be used together.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT, see [LICENSE](LICENSE).
 
 ---
 
 ## Services
 
-Compliance-grade AI architecture for regulated workloads — async-first, USD-denominated, LATAM-based / EN-fluent. See [blog.home301server.com.br/services](https://blog.home301server.com.br/services/).
+Compliance-grade AI architecture for regulated workloads, async-first, USD-denominated, LATAM-based / EN-fluent. See [blog.home301server.com.br/services](https://blog.home301server.com.br/services/).
